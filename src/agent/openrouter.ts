@@ -68,8 +68,10 @@ export async function streamChat(o: StreamOptions): Promise<StreamResult> {
   if (!res.ok || !res.body) {
     let msg = `HTTP ${res.status}`;
     try {
-      const j = (await res.json()) as { error?: { message?: string } };
+      const j = (await res.json()) as { error?: { message?: string; metadata?: { raw?: unknown; provider_name?: string } } };
       if (j.error?.message) msg += `: ${j.error.message}`;
+      const raw = j.error?.metadata?.raw;
+      if (raw) msg += ` (${j.error?.metadata?.provider_name ?? 'provider'}: ${(typeof raw === 'string' ? raw : JSON.stringify(raw)).slice(0, 400)})`;
     } catch {
       /* ignore */
     }

@@ -69,14 +69,14 @@ export const writeCode: ToolDef<{ code: string }> = {
   },
 };
 
-export const cartStats: ToolDef<Record<string, never>> = {
+export const cartStats: ToolDef<{ lint?: boolean }> = {
   name: 'cart_stats', kind: 'read',
   description: 'Tokens/chars vs limits, functions with token counts, syntax check and lint.',
-  parameters: { type: 'object', properties: {} },
+  parameters: { type: 'object', properties: { lint: { type: 'boolean', description: 'include lint warnings (default true)' } } },
   run(_a, ctx) {
     const code = ctx.cart().code;
     const s = codeStats(code);
     return ok({ tokens: `${s.tokens}/${s.tokenLimit}`, chars: `${s.chars}/${s.charLimit}`, syntax: syntaxNote(code) ?? 'ok',
-      functions: s.functions.map((f) => `${f.name} (line ${f.line}): ${f.tokens}`), lint: lint(code).slice(0, 40).map((i) => `line ${i.line}: ${i.message}`) });
+      functions: s.functions.map((f) => `${f.name} (line ${f.line}): ${f.tokens}`), lint: _a.lint === false ? undefined : lint(code).slice(0, 40).map((i) => `line ${i.line}: ${i.message}`) });
   },
 };

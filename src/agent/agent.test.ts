@@ -29,6 +29,17 @@ describe('tool schemas', () => {
     expect(TOOLS.length).toBe(21);
     for (const s of toolSchemas()) expect(s.function.parameters.type).toBe('object');
   });
+  it('schemas avoid features strict providers (Gemini) reject', () => {
+    const walk = (sc: import('./types').JsonSchema, path: string) => {
+      expect(sc.anyOf, `${path} uses anyOf`).toBeUndefined();
+      expect(sc.type, `${path} has no type`).toBeDefined();
+      if (sc.type === 'array') expect(sc.items, `${path} array without items`).toBeDefined();
+      if (sc.type === 'object') expect(Object.keys(sc.properties ?? {}).length, `${path} empty object`).toBeGreaterThan(0);
+      for (const [k, v] of Object.entries(sc.properties ?? {})) walk(v, `${path}.${k}`);
+      if (sc.items) walk(sc.items, `${path}[]`);
+    };
+    for (const t of TOOLS) walk(t.parameters, t.name);
+  });
   it('validate reports missing and mistyped args', () => {
     const t = TOOL_BY_NAME.get('get_sprite')!;
     expect(validate(t.parameters, {})).toEqual(['args.n: required']);
@@ -69,7 +80,7 @@ describe('gfx tools', () => {
   it('spritesheet image, flags and map', async () => {
     const img = await call('get_spritesheet_image', { region: { x: 0, y: 0, w: 16, h: 8 } });
     expect(img.images?.[0]).toMatch(/^data:image\/png;base64,/);
-    await call('set_flags', { n: 5, flags: [0, 2] });
+    await call('set_flags', { n: 5, flags: 5 });
     expect(cart.flags[5]).toBe(5);
     await call('set_map', { x: 1, y: 2, rows: ['0a0b'] });
     expect((await call('get_map', { x: 1, y: 2, w: 2, h: 1 })).json.rows).toEqual(['0a0b']);
@@ -82,7 +93,7 @@ describe('sound tools', () => {
     const r = await call('get_sfx', { n: 40 });
     expect(r.json.notes).toEqual([{ pitch: 'c3', wave: 3, vol: 6, fx: 0 }, { pitch: 'e3', wave: 0, vol: 5, fx: 1 }]);
     expect((await call('set_sfx', { n: 40, speed: 6, notes: [{ pitch: 'h9' }] })).isError).toBe(true);
-    await call('set_music', { pattern: 20, channels: [40, null, null, null], flags: 1 });
+    await call('set_music', { pattern: 20, channels: [40, -1, -1, -1], flags: 1 });
     expect(cart.music[20]).toEqual({ flags: 1, channels: [40, 0x42, 0x43, 0x44] });
     expect((await call('play_sfx', { n: 40 })).content).toMatch(/audio/);
   });

@@ -26,6 +26,7 @@ export function validate(schema: JsonSchema, value: unknown, path = 'args'): str
     if (!Array.isArray(value)) return [`${path}: expected an array`];
     if (schema.items) value.forEach((v, i) => errors.push(...validate(schema.items!, v, `${path}[${i}]`)));
   } else if (t === 'string') {
+    if (typeof value === 'number') return errors; // e.g. pitch as a number
     if (typeof value !== 'string') errors.push(`${path}: expected a string`);
     else if (schema.enum && !schema.enum.includes(value)) errors.push(`${path}: must be one of ${schema.enum.join(', ')}`);
   } else if (t === 'number' || t === 'integer') {
