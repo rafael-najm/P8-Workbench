@@ -176,6 +176,11 @@ function AgentSettings() {
         <input className="input" type="password" value={s.openrouterKey} placeholder="sk-or-..." onChange={(e) => update({ openrouterKey: e.target.value.trim() })} data-testid="api-key" />
         <span className="text-[11px] text-p8-orange">Stored only in this browser (localStorage) and sent only to openrouter.ai. Don't use this on a shared computer.</span>
       </label>
+      <label className="flex items-center gap-2">
+        <span className="text-muted">Budget per task (USD)</span>
+        <input className="input w-24" type="number" min={0} step={0.1} value={s.agentBudget} onChange={(e) => update({ agentBudget: Math.max(0, Number(e.target.value) || 0) })} />
+        <span className="text-[11px] text-dim">0 = no limit. Tip: cheaper models (e.g. Gemini Flash, DeepSeek, Haiku) work well for small tasks.</span>
+      </label>
       <div className="flex flex-col gap-1">
         <span className="text-muted">Model: <span className="text-p8-blue">{s.model}</span></span>
         <div className="flex items-center gap-2">

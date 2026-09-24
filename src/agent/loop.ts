@@ -20,6 +20,8 @@ export interface LoopOptions {
   vision: boolean;
   signal?: AbortSignal;
   maxSteps?: number;
+  /** Stop the task when its cost (USD, as reported by OpenRouter) reaches this. */
+  maxCost?: number;
   onEvent(e: AgentEvent): void;
   /** Called before edit tools when approval is required; resolve false to reject. */
   approve?(call: ToolCall, preview: EditPreview | null): Promise<boolean>;
@@ -48,11 +50,36 @@ export async function executeTool(call: ToolCall, ctx: ToolContext, approve?: Lo
   }
 }
 
+const KEEP_RECENT = 8;
+const OLD_TOOL_CHARS = 1200;
+
+/**
+ * Keeps the history cheap: tool results older than the last few messages are
+ * truncated and old screenshots dropped (the model can call the tool again).
+ */
+export function compactHistory(msgs: ChatMessage[]): void {
+  const lastImages = msgs.map((m, i) => (m.role === 'user' && Array.isArray(m.content) ? i : -1)).filter((i) => i >= 0).at(-1) ?? -1;
+  msgs.forEach((m, i) => {
+    if (i >= msgs.length - KEEP_RECENT) return;
+    if (m.role === 'tool' && m.content.length > OLD_TOOL_CHARS) {
+      m.content = `${m.content.slice(0, OLD_TOOL_CHARS)}\n…(old result truncated; call the tool again if you need it)`;
+    } else if (m.role === 'user' && Array.isArray(m.content) && i !== lastImages) {
+      msgs[i] = { role: 'user', content: '(older screenshots removed to save context)' };
+    }
+  });
+}
+
 export async function runAgent(o: LoopOptions): Promise<ChatMessage[]> {
   const msgs = o.messages;
   const tools = toolSchemas();
+  let spent = 0;
   for (let step = 0; step < (o.maxSteps ?? 40); step++) {
     if (o.signal?.aborted) break;
+    if (o.maxCost !== undefined && spent >= o.maxCost) {
+      o.onEvent({ type: 'error', message: `Stopped: this task reached its budget ($${spent.toFixed(3)} of $${o.maxCost}). Raise it in Settings or send "continue".` });
+      break;
+    }
+    compactHistory(msgs);
     let res;
     try {
       res = await streamChat({ apiKey: o.apiKey, model: o.model, messages: msgs, tools, signal: o.signal, fetchFn: o.fetchFn, onText: (d) => o.onEvent({ type: 'text', delta: d }) });
@@ -62,6 +89,7 @@ export async function runAgent(o: LoopOptions): Promise<ChatMessage[]> {
       break;
     }
     msgs.push({ role: 'assistant', content: res.content || null, tool_calls: res.toolCalls.length ? res.toolCalls : undefined });
+    spent += res.usage?.cost ?? 0;
     o.onEvent({ type: 'assistant', content: res.content, usage: res.usage });
     if (!res.toolCalls.length) break;
     const images: ContentPart[] = [];

@@ -4,7 +4,7 @@ import { cloneCart } from '../cart/cart';
 import { parseP8 } from '../cart/p8format';
 import type { Cart } from '../cart/types';
 import { InProcessExecutor } from './exec/executor';
-import { runAgent, type AgentEvent } from './loop';
+import { compactHistory, runAgent, type AgentEvent } from './loop';
 import { validate } from './schema';
 import { TOOL_BY_NAME, TOOLS, toolSchemas } from './tools';
 import type { ToolContext, ToolResult } from './types';
@@ -143,5 +143,33 @@ describe('agent loop', () => {
     const before = cart.code;
     await runAgent({ apiKey: 'k', model: 'm', messages: [], ctx, vision: false, fetchFn, maxSteps: 1, onEvent: () => {}, approve: async () => false });
     expect(cart.code).toBe(before);
+  });
+});
+
+describe('cost controls', () => {
+  it('compacts old tool results and screenshots', () => {
+    const msgs: import('./types').ChatMessage[] = [
+      { role: 'tool', tool_call_id: 'a', content: 'x'.repeat(5000) },
+      { role: 'user', content: [{ type: 'image_url', image_url: { url: 'data:1' } }] },
+      ...Array.from({ length: 8 }, () => ({ role: 'assistant' as const, content: 'hi' })),
+      { role: 'user', content: [{ type: 'image_url', image_url: { url: 'data:2' } }] },
+    ];
+    compactHistory(msgs);
+    expect((msgs[0] as { content: string }).content.length).toBeLessThan(1400);
+    expect(msgs[1]!.content).toMatch(/removed/);
+    expect(Array.isArray(msgs.at(-1)!.content)).toBe(true);
+  });
+  it('stops when the task budget is reached and sends max_tokens', async () => {
+    let body: { max_tokens?: number } = {};
+    const fetchFn = (async (_u: string, init: RequestInit) => {
+      body = JSON.parse(init.body as string);
+      const chunk = { choices: [{ delta: { tool_calls: [{ index: 0, id: 'c', function: { name: 'cart_stats', arguments: '{}' } }] } }], usage: { cost: 0.3 } };
+      return new Response(new Blob([`data: ${JSON.stringify(chunk)}\n\ndata: [DONE]\n\n`]).stream());
+    }) as unknown as typeof fetch;
+    const events: AgentEvent[] = [];
+    await runAgent({ apiKey: 'k', model: 'm', messages: [], ctx, vision: false, fetchFn, maxCost: 0.5, onEvent: (e) => events.push(e) });
+    expect(body.max_tokens).toBe(4096);
+    expect(events.filter((e) => e.type === 'assistant')).toHaveLength(2);
+    expect(events.find((e) => e.type === 'error')).toBeDefined();
   });
 });

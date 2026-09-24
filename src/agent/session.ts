@@ -122,7 +122,7 @@ export const useAgent = create<AgentState>((set, get) => {
       const models = (await import('./models')).cachedModels();
       const vision = models.find((m) => m.id === s.model)?.architecture?.input_modalities?.includes('image') ?? true;
       try {
-        history = await runAgent({ apiKey: s.openrouterKey, model: s.model, messages: history, ctx: toolContext, vision, signal: controller.signal, onEvent, approve });
+        history = await runAgent({ apiKey: s.openrouterKey, model: s.model, messages: history, ctx: toolContext, vision, signal: controller.signal, onEvent, approve, maxCost: s.agentBudget > 0 ? s.agentBudget : undefined });
       } finally {
         set({ running: false });
         controller = null;

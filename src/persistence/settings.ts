@@ -9,6 +9,8 @@ export interface Settings {
   openrouterKey: string;
   model: string;
   agentMode: 'auto' | 'approve';
+  /** Max USD spent per agent task. */
+  agentBudget: number;
   panelLayout: string;
 }
 
@@ -21,6 +23,7 @@ const DEFAULTS: Settings = {
   openrouterKey: '',
   model: 'anthropic/claude-sonnet-4.5',
   agentMode: 'auto',
+  agentBudget: 0.5,
   panelLayout: '',
 };
 
