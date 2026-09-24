@@ -57,13 +57,29 @@ export const editCode: ToolDef<{ old_str: string; new_str: string }> = {
   },
 };
 
-export const writeCode: ToolDef<{ code: string }> = {
+/** Names of top-level-ish functions (function foo / function a.b / function a:b / local function foo). */
+function functionNames(code: string): Set<string> {
+  return new Set([...code.matchAll(/^\s*(?:local\s+)?function\s+([\w.:]+)/gm)].map((m) => m[1]!));
+}
+
+export const writeCode: ToolDef<{ code: string; replace_everything?: boolean }> = {
   name: 'write_code', kind: 'edit',
-  description: 'Replace ALL the code. Only when a rewrite is really needed; otherwise use edit_code.',
-  parameters: { type: 'object', properties: { code: { type: 'string' } }, required: ['code'] },
+  description: 'Replace ALL the code of the cart with `code` (the complete program). Almost never needed: to change a function use edit_code. Refused if it would delete existing functions or most of the code, unless replace_everything is true because the user explicitly asked for a full rewrite.',
+  parameters: { type: 'object', properties: { code: { type: 'string', description: 'the complete new program' }, replace_everything: { type: 'boolean', description: 'true only if the user asked to rewrite/replace the whole cart' } }, required: ['code'] },
   summarize: (a) => `${a.code.split('\n').length} lines`,
   preview: (a, ctx) => ({ type: 'code', before: ctx.cart().code, after: a.code }),
   run(a, ctx) {
+    const before = ctx.cart().code;
+    if (!a.replace_everything) {
+      const lost = [...functionNames(before)].filter((f) => !functionNames(a.code).has(f));
+      const shrink = a.code.length < before.length * 0.6;
+      if (lost.length || shrink) {
+        return fail(
+          `refused: this would ${lost.length ? `delete ${lost.length} existing function(s) (${lost.slice(0, 8).join(', ')})` : 'remove most of the code'}. ` +
+            'write_code replaces the WHOLE cart. To change one function, use edit_code with the old function text as old_str.',
+        );
+      }
+    }
     ctx.update(['code'], 'write_code', (c) => (c.code = a.code));
     return ok({ ok: true, tokens: codeStats(a.code).tokens, syntax: syntaxNote(a.code) ?? 'ok' });
   },

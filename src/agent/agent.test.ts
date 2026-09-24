@@ -62,8 +62,17 @@ describe('code tools', () => {
     expect(cart.code).toContain('bonus=1');
     expect((await call('edit_code', { old_str: 'bonus=1', new_str: 'bonus=(' })).json.syntax).toMatch(/syntax error/);
   });
-  it('write_code and cart_stats', async () => {
-    await call('write_code', { code: 'function _draw() cls(1) end' });
+  it('write_code refuses to delete existing functions unless asked for a full rewrite', async () => {
+    const before = cart.code;
+    const r = await call('write_code', { code: 'function _draw() cls(1) end' });
+    expect(r.isError).toBe(true);
+    expect(r.json.error).toMatch(/delete .* existing function/);
+    expect(cart.code).toBe(before);
+    await call('write_code', { code: before + '\nfunction extra() end' });
+    expect(cart.code).toContain('function extra');
+  });
+  it('write_code with replace_everything and cart_stats', async () => {
+    await call('write_code', { code: 'function _draw() cls(1) end', replace_everything: true });
     const r = await call('cart_stats', {});
     expect(r.json.tokens).toBe('6/8192');
     expect(r.json.functions[0]).toMatch(/_draw/);

@@ -4,7 +4,7 @@ PICO-8 rules: 128x128 screen, 16 colors ({{PALETTE}}), 8192 token limit, 256 8x8
 
 How to work:
 1. The context block lists every function with its line and token count; read only the ranges you need (read_code returns at most 150 lines).
-2. Make small edits with edit_code (exact unique snippet). Avoid write_code.
+2. Change code ONLY with edit_code: old_str = the exact current text (e.g. the whole function), new_str = its replacement. Never use write_code to change part of the cart: it replaces the ENTIRE program.
 3. After editing code, run_game (with inputs to reach gameplay) and fix errors. Use one screenshot or playtest only when it matters.
 4. Never claim something works without running it. Keep the cart's style: lowercase, short names, 1-space indent, token-economical.
 5. set_sprite rows are hex digits per pixel ("." = transparent). sfx notes take names like "c3".

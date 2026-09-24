@@ -15,12 +15,12 @@ export interface Settings {
   settingsVersion: number;
 }
 
-/** Cheap model with tool calling and vision (about 12x cheaper than Sonnet). */
-export const DEFAULT_MODEL = 'google/gemini-3.1-flash-lite';
+/** Cheap model with tool calling and vision (about 10x cheaper than Sonnet) that edits code reliably. */
+export const DEFAULT_MODEL = 'google/gemini-2.5-flash';
 
 export const RECOMMENDED_MODELS = [
-  { id: DEFAULT_MODEL, note: 'default · very cheap' },
-  { id: 'google/gemini-2.5-flash', note: 'cheap · strong' },
+  { id: DEFAULT_MODEL, note: 'default · cheap' },
+  { id: 'google/gemini-3.1-flash-lite', note: 'cheapest · weaker at big edits' },
   { id: 'anthropic/claude-haiku-4.5', note: 'smarter · ~4x the cost' },
 ];
 
@@ -35,7 +35,7 @@ const DEFAULTS: Settings = {
   agentMode: 'auto',
   agentBudget: 0.25,
   panelLayout: '',
-  settingsVersion: 2,
+  settingsVersion: 3,
 };
 
 const KEY = 'pico-workbench.settings';
@@ -58,6 +58,11 @@ export function loadSettings(): Settings {
       if (saved.model === 'anthropic/claude-sonnet-4.5') saved.model = DEFAULT_MODEL;
       if (saved.agentBudget === 0.5) saved.agentBudget = DEFAULTS.agentBudget;
       saved.settingsVersion = 2;
+    }
+    if (saved.settingsVersion < 3) {
+      // flash-lite (v2 default) was too weak for safe code edits
+      if (saved.model === 'google/gemini-3.1-flash-lite') saved.model = DEFAULT_MODEL;
+      saved.settingsVersion = 3;
       storage()?.setItem(KEY, JSON.stringify(saved));
     }
     return saved;

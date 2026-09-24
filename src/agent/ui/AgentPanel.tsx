@@ -48,6 +48,15 @@ function ToolCard({ item }: { item: Extract<ChatItem, { kind: 'tool' }> }) {
         <span className="min-w-0 flex-1 truncate text-muted">{item.summary}</span>
         {item.ms !== undefined && <span className="text-dim tabular-nums">{item.ms < 1000 ? `${item.ms}ms` : `${(item.ms / 1000).toFixed(1)}s`}</span>}
       </button>
+      {item.before && (
+        <button
+          className="mx-2 mb-1 text-[10px] text-p8-orange hover:underline disabled:text-dim disabled:no-underline"
+          disabled={item.undone || useAgent.getState().running}
+          onClick={() => useAgent.getState().undoEdit(item.id)}
+        >
+          {item.undone ? 'edit undone' : '↶ undo this edit'}
+        </button>
+      )}
       {item.result?.images?.map((src, i) => <img key={i} src={src} alt="tool screenshot" className="pixelated mx-2 mb-2 max-h-64 border border-line" />)}
       {open && (
         <div className="border-t border-line p-2">
