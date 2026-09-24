@@ -16,7 +16,7 @@ import type { ChatMessage, EditPreview, ToolCall, ToolContext, ToolResult } from
 export type ChatItem =
   | { kind: 'user'; id: number; text: string }
   | { kind: 'assistant'; id: number; text: string; cost?: number; tokens?: number }
-  | { kind: 'tool'; id: number; name: string; summary: string; args: unknown; result?: ToolResult; ms?: number; status: 'running' | 'ok' | 'error' }
+  | { kind: 'tool'; id: number; name: string; summary: string; args: unknown; result?: ToolResult; ms?: number; status: 'running' | 'ok' | 'error'; before?: string; undone?: boolean }
   | { kind: 'approval'; id: number; name: string; preview: EditPreview | null; resolve(ok: boolean): void; decided?: boolean }
   | { kind: 'error'; id: number; text: string }
   | { kind: 'task'; id: number; snapshot: string; undone?: boolean };
@@ -27,12 +27,15 @@ interface AgentState {
   send(text: string): Promise<void>;
   stop(): void;
   undoTask(id: number): void;
+  undoEdit(id: number): void;
   clear(): void;
 }
 
 let nextId = 1;
 let controller: AbortController | null = null;
 let history: ChatMessage[] = [];
+/** Cart (p8 text) before the first change made by the running tool call. */
+let editSnapshot: string | null = null;
 
 export function autoContext(): string {
   const p = useProject.getState();
@@ -54,6 +57,7 @@ const toolContext: ToolContext = {
   cart: () => useProject.getState().cart!,
   update(kinds, _label, fn) {
     const st = useProject.getState();
+    editSnapshot ??= serializeP8(st.cart!);
     if (kinds.length === 1 && kinds[0] === 'code') {
       const c = structuredClone(st.cart!.code);
       const tmp = { ...st.cart!, code: c };
@@ -107,10 +111,12 @@ export const useAgent = create<AgentState>((set, get) => {
         } else if (e.type === 'tool_start') {
           const id = nextId++;
           toolIds.set(e.call.id, id);
+          editSnapshot = null;
           push({ kind: 'tool', id, name: e.call.function.name, summary: e.summary, args: e.args, status: 'running' });
         } else if (e.type === 'tool_end') {
           const id = toolIds.get(e.call.id);
-          if (id) patch(id, { result: e.result, ms: e.ms, status: e.result.isError ? 'error' : 'ok' });
+          if (id) patch(id, { result: e.result, ms: e.ms, status: e.result.isError ? 'error' : 'ok', before: editSnapshot ?? undefined });
+          editSnapshot = null;
         } else if (e.type === 'error') push({ kind: 'error', id: nextId++, text: e.message });
       };
       const approve = s.agentMode === 'approve'
@@ -138,6 +144,13 @@ export const useAgent = create<AgentState>((set, get) => {
       useProject.getState().replaceCart(parseP8(item.snapshot));
       patch(id, { undone: true });
       history.push({ role: 'user', content: '[the user undid all changes from that task]' });
+    },
+    undoEdit(id) {
+      const item = get().items.find((i) => i.id === id);
+      if (!item || item.kind !== 'tool' || !item.before) return;
+      useProject.getState().replaceCart(parseP8(item.before));
+      patch(id, { undone: true });
+      history.push({ role: 'user', content: `[the user reverted your ${item.name} call; the cart is back to how it was before it]` });
     },
     clear() {
       history = [];
