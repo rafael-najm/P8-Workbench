@@ -8,7 +8,7 @@ export default defineConfig({
   base: process.env.BASE_PATH ?? '/',
   plugins: [react(), tailwindcss()],
   test: {
-    include: ['src/**/*.test.ts'],
+    include: ["src/**/*.test.ts"],
     environment: 'node',
   },
 });
