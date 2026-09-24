@@ -7,6 +7,7 @@ import './editors/sprite/SpritePanel';
 import './editors/map/MapPanel';
 import './editors/sfx/SfxPanel';
 import './editors/music/MusicPanel';
+import './agent/ui/AgentPanel';
 import './ui/panels/ConsolePanel';
 import './ui/panels/ProjectsPanel';
 

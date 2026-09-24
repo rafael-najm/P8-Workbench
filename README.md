@@ -14,7 +14,7 @@ site with no backend.
 - [x] **M4:** UI shell (dockable panels, command palette, shortcuts), Monaco `pico8-lua`, Game View with inspector and hot reload, projects in IndexedDB
 - [x] **M5:** sprite editor (tools, flags, animation preview, undo, PNG paste) and map editor (zoom/pan, tile brushes, shared-area warning)
 - [x] **M6:** audio (AudioWorklet synth with 8 waveforms and 7 effects, sample-accurate sequencer, sfx tracker/graph editor, music pattern editor)
-- [ ] M7: AI agent
+- [x] **M7:** AI agent (OpenRouter streaming + tool calling, 21 tools, headless worker, playtest bots, approve mode, task undo)
 - [ ] M8: polish and deploy
 
 ## Development

@@ -48,6 +48,12 @@ function menuitem(i, label, fn)
   __p8_menuitem(i, label)
 end
 
+function __p8_callenv(name, ...)
+  local fn = __p8_env[name]
+  if type(fn) ~= "function" then return "error", "no function named " .. tostring(name) end
+  return __p8_invoke(fn, ...)
+end
+
 function __p8_menu_call(i, buttons)
   local fn = __p8_menu[i]
   if not fn then return "ok" end
@@ -438,6 +444,18 @@ export class Machine {
     const res = this.bridge.call('__p8_functions', [], 1);
     const s = typeof res.values[0] === 'string' ? res.values[0] : '';
     return s ? s.split(',') : [];
+  }
+
+  /**
+   * Calls a global function of the cart (e.g. a playtest bot) with the
+   * watchdog. Returns its first two results.
+   */
+  callFunction(name: string, ...args: (number | string | boolean)[]): { ok: true; values: (number | boolean | string | undefined)[] } | { ok: false; error: RuntimeError } {
+    const res = this.bridge.call('__p8_callenv', [name, ...args], 3);
+    if (res.error) return { ok: false, error: this.parseError(res.error, '', 'runtime') };
+    const [status, a, b] = res.values;
+    if (status !== 'ok') return { ok: false, error: this.parseError(typeof a === 'string' ? a : 'error', typeof b === 'string' ? b : '', 'runtime') };
+    return { ok: true, values: [a, b] };
   }
 
   /** Invokes a pause-menu item callback (1..5). */
