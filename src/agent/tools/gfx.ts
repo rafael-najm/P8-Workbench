@@ -55,8 +55,8 @@ export const getSpritesheetImage: ToolDef<{ region?: { x: number; y: number; w: 
 
 export const setFlags: ToolDef<{ n: number; flags: number | number[] }> = {
   name: 'set_flags', kind: 'edit',
-  description: 'Set sprite n flags: a byte (0-255) or a list of bit indices (0-7) to turn on.',
-  parameters: { type: 'object', properties: { n: { type: 'integer', minimum: 0, maximum: 255 }, flags: { anyOf: [{ type: 'integer', minimum: 0, maximum: 255 }, { type: 'array', items: { type: 'integer', minimum: 0, maximum: 7 } }] } }, required: ['n', 'flags'] },
+  description: 'Set sprite n flags as a byte (0-255): bit 0 = 1, bit 1 = 2, bit 2 = 4... e.g. 5 turns on flags 0 and 2.',
+  parameters: { type: 'object', properties: { n: { type: 'integer', minimum: 0, maximum: 255 }, flags: { type: 'integer', minimum: 0, maximum: 255 } }, required: ['n', 'flags'] },
   summarize: (a) => `#${a.n} = ${JSON.stringify(a.flags)}`,
   run(a, ctx) {
     const v = Array.isArray(a.flags) ? a.flags.reduce((m, b) => m | (1 << b), 0) : a.flags;
