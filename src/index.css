@@ -1,0 +1,145 @@
+@import 'tailwindcss';
+
+/* Design tokens. PICO-8 palette colors are used as accents. */
+@theme {
+  --color-bg: #070a12;
+  --color-bg2: #0b0f1a;
+  --color-panel: #0f1420;
+  --color-panel2: #141b2b;
+  --color-line: #222a3d;
+  --color-line2: #2e3852;
+  --color-ink: #e6e1dc;
+  --color-muted: #7a84a3;
+  --color-dim: #4b5577;
+  --color-p8-black: #000000;
+  --color-p8-darkblue: #1d2b53;
+  --color-p8-purple: #7e2553;
+  --color-p8-darkgreen: #008751;
+  --color-p8-brown: #ab5236;
+  --color-p8-darkgrey: #5f574f;
+  --color-p8-grey: #c2c3c7;
+  --color-p8-white: #fff1e8;
+  --color-p8-red: #ff004d;
+  --color-p8-orange: #ffa300;
+  --color-p8-yellow: #ffec27;
+  --color-p8-green: #00e436;
+  --color-p8-blue: #29adff;
+  --color-p8-lavender: #83769c;
+  --color-p8-pink: #ff77a8;
+  --color-p8-peach: #ffccaa;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  --shadow-hard: 3px 3px 0 0 #000;
+  --shadow-hard-lg: 6px 6px 0 0 #000;
+  --animate-pop: pop 160ms cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  --animate-fade: fade 160ms ease-out;
+  --animate-slide-up: slide-up 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes pop {
+  from { opacity: 0; transform: scale(0.96) translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line2) transparent;
+}
+
+::selection {
+  background: #1d2b53;
+}
+
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex h-7 items-center gap-1.5 border border-line2 bg-panel2 px-2.5 text-[12px] text-ink transition-[transform,background-color,border-color,box-shadow] duration-150 select-none;
+    box-shadow: var(--shadow-hard);
+  }
+  .btn:hover {
+    @apply border-p8-blue bg-[#18223a];
+  }
+  .btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 0 #000;
+  }
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+  .btn-primary {
+    @apply border-p8-pink bg-p8-purple text-p8-white;
+  }
+  .btn-primary:hover {
+    @apply border-p8-pink bg-[#96305f];
+  }
+  .btn-ghost {
+    @apply inline-flex h-7 min-w-7 items-center justify-center gap-1 px-1.5 text-muted transition-colors duration-150 select-none;
+  }
+  .btn-ghost:hover {
+    @apply bg-panel2 text-ink;
+  }
+  .btn-ghost[data-active='true'] {
+    @apply text-p8-blue;
+  }
+  .input {
+    @apply h-7 border border-line2 bg-bg2 px-2 text-[12px] text-ink outline-none transition-colors duration-150;
+  }
+  .input:focus {
+    @apply border-p8-blue;
+  }
+  .kbd {
+    @apply inline-flex h-[18px] min-w-[18px] items-center justify-center border border-line2 bg-bg2 px-1 text-[10px] text-muted;
+  }
+  .label {
+    @apply text-[10px] tracking-[0.12em] text-muted uppercase;
+  }
+}
+
+/* Monaco extras */
+.p8-error-line {
+  background: rgba(255, 0, 77, 0.12);
+}
+.p8-error-glyph {
+  background: #ff004d;
+  width: 4px !important;
+  margin-left: 6px;
+}
+
+/* CRT overlay for the game screen */
+.crt::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0, rgba(0, 0, 0, 0.22) 1px, transparent 1px, transparent 3px),
+    radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.35) 100%);
+  mix-blend-mode: multiply;
+}
