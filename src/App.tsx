@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { bootProjects, useProject } from './store/project';
 import { PixelText } from './ui/components/PixelText';
 import { Workspace } from './ui/layout/Workspace';
+import { HomeScreen } from './ui/HomeScreen';
+import { Onboarding } from './ui/Onboarding';
 import './ui/panels/GamePanel';
 import './editors/sprite/SpritePanel';
 import './editors/map/MapPanel';
@@ -14,6 +16,12 @@ import './ui/panels/ProjectsPanel';
 export function App() {
   const ready = useProject((s) => s.cart !== null);
   const [error, setError] = useState<string | null>(null);
+  const [home, setHome] = useState(true);
+  useEffect(() => {
+    const go = () => setHome(true);
+    window.addEventListener('p8-home', go);
+    return () => window.removeEventListener('p8-home', go);
+  }, []);
 
   useEffect(() => {
     bootProjects().catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
@@ -42,5 +50,10 @@ export function App() {
       </div>
     );
   }
-  return <Workspace />;
+  return (
+    <>
+      {home ? <HomeScreen onEnter={() => setHome(false)} /> : <Workspace />}
+      <Onboarding />
+    </>
+  );
 }

@@ -19,7 +19,7 @@ export function TopBar() {
 
   return (
     <header className="relative z-40 flex h-11 shrink-0 items-center gap-3 border-b border-line bg-bg2 px-3">
-      <button className="flex items-center gap-2" onClick={() => useUi.getState().toggle('projects')} title="Projects (Ctrl+O)">
+      <button className="flex items-center gap-2" onClick={() => window.dispatchEvent(new Event('p8-home'))} title="Home">
         <div className="grid h-6 w-6 place-items-center border border-p8-pink bg-p8-purple shadow-[var(--shadow-hard)]">
           <Icon name="game" size={14} className="text-p8-white" />
         </div>

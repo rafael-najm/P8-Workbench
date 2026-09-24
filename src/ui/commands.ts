@@ -35,6 +35,7 @@ export function getCommands(): Command[] {
     { id: 'import', title: 'Import .p8…', group: 'Project', run: pickAndImport },
     { id: 'export', title: 'Export .p8', group: 'Project', shortcut: 'Ctrl+Shift+E', run: exportCart },
     { id: 'projects', title: 'Open projects', group: 'Project', shortcut: 'Ctrl+O', run: () => ui.toggle('projects') },
+    { id: 'home', title: 'Home screen', group: 'Workspace', run: () => { window.dispatchEvent(new Event('p8-home')); } },
     { id: 'palette', title: 'Command palette', group: 'Workspace', shortcut: 'Ctrl+K', run: () => ui.setPalette(true) },
     { id: 'settings', title: 'Settings', group: 'Workspace', shortcut: 'Ctrl+,', run: () => ui.setSettings(true) },
     { id: 'layout-reset', title: 'Reset panel layout', group: 'Workspace', run: () => ui.resetLayout() },

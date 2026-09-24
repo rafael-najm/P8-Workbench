@@ -55,4 +55,4 @@ Shortcuts: `Ctrl+R` run/reload · `Ctrl+Enter` restart · `Ctrl+S` save + hot re
 - Custom sfx instruments and sfx filters (noiz, buzz, reverb…) are approximated or ignored.
 - `.p8.png` carts and `#include` are not supported (only `.p8` text).
 - The "strict 16.16 overflow" toggle is planned; see `docs/PLAN.md`.
-- `TODO(milestone-8)`: first-visit onboarding, a home screen with a live demo cart, and code-splitting of the bundle (Monaco is about 4 MB).
+- `TODO(milestone-8)`: code-splitting of the bundle (Monaco is about 4 MB).

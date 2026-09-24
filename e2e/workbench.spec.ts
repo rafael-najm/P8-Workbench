@@ -1,7 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 
 async function open(page: Page) {
+  await page.addInitScript(() => {
+    const k = 'pico-workbench.settings';
+    localStorage.setItem(k, JSON.stringify({ ...JSON.parse(localStorage.getItem(k) ?? '{}'), onboarded: true }));
+  });
   await page.goto('/');
+  await page.getByText('continue last cart').click();
   await page.waitForSelector('[data-testid=code-editor] .monaco-editor', { timeout: 30_000 });
 }
 
