@@ -7,9 +7,11 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-29adff?style=flat-square&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-83769c?style=flat-square&logo=react&logoColor=white)
 ![Lua](https://img.shields.io/badge/Lua_5.4-WebAssembly-1d2b53?style=flat-square&logo=lua&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-342_passing-00e436?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-347_passing-00e436?style=flat-square)
 ![No backend](https://img.shields.io/badge/backend-none-ff77a8?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-ffec27?style=flat-square)
+
+**[▶ Try it in your browser](https://rafael-najm.github.io/P8-Workbench/)**
 
 <img src="docs/images/workspace.png" alt="Code editor with the game running next to it" width="900" />
 
@@ -21,7 +23,7 @@ PICO-8 has a charming editor, but it is tiny: 128x128 pixels. **PICO Workbench**
 - sprite, map, sfx and music editors that update the running game live;
 - an **AI agent** that edits everything, runs the game headless, looks at screenshots and sends bots to playtest.
 
-The runtime is **written from scratch** (no Lexaloffle code or assets) and the whole thing is a **static site**: no server and no account. Bring your own OpenRouter key.
+The runtime is **written from scratch** (no Lexaloffle code or assets; PICO Workbench is an independent project, not affiliated with Lexaloffle) and the whole thing is a **static site**: no server and no account. Bring your own OpenRouter key.
 
 ## ✨ Highlights
 
@@ -33,7 +35,7 @@ The runtime is **written from scratch** (no Lexaloffle code or assets) and the w
 | 🖌️ **Asset editors** | Sprites (8/16/32 blocks, tools, flags, animation preview, paste a PNG and it snaps to the palette), map, and an sfx tracker/graph plus a music editor. |
 | 🔊 **Real synth** | AudioWorklet with the 8 PICO-8 waveforms and 7 effects, with sample-accurate timing. |
 | 🤖 **AI agent** | 21 tools: edit code, draw sprites from hex grids, write sfx with note names, run headless with input scripts, take screenshot contact sheets, and **playtest bots** that report time to game over, errors and object peaks. Includes an approve mode with diffs and one-click "undo the whole task". |
-| 🧪 **Tested** | `.p8` round-trips byte-for-byte, the token count matches shrinko8, the sample game runs 10,000 frames with random input, 342 unit tests and Playwright e2e. |
+| 🧪 **Tested** | `.p8` round-trips byte-for-byte, the token count matches shrinko8, the sample game runs 10,000 frames with random input, 347 unit tests and Playwright e2e. |
 
 <table>
 <tr>
@@ -56,17 +58,18 @@ Requires Node LTS (20+). Works on Windows, macOS and Linux.
 ```sh
 npm install
 npm run dev         # http://localhost:5173
-npm test            # unit tests (Vitest, 340+)
+npm test            # unit tests (Vitest, 347)
 npm run test:e2e    # Playwright (builds and serves on :4173)
 npm run build       # static site in dist/
 ```
 
-Using the AI agent: open Settings (gear icon), paste an OpenRouter key. The default model is `google/gemini-3.1-flash-lite` (very cheap, tools + vision) with a $0.25 budget per task; history is compacted and code is read in pages to keep costs low. The key is stored only in `localStorage` and is sent only to openrouter.ai.
+Using the AI agent: open Settings (gear icon), paste an OpenRouter key. The default model is `google/gemini-2.5-flash` (cheap, tools + vision) with a $0.25 budget per task; history is compacted and code is read in pages to keep costs low. Every agent edit can be undone, and `write_code` refuses to delete existing functions. The key is stored only in `localStorage` and is sent only to openrouter.ai.
 
 Shortcuts: `Ctrl+R` run/reload · `Ctrl+Enter` restart · `Ctrl+S` save + hot reload · `F5` play/pause · `F6` step · `Ctrl+K` command palette · `Ctrl+1..6` panels (game, sprites, map, sfx, music, agent) · `Esc` closes a panel.
 
 ## Deploy
 
+- **Live:** https://rafael-najm.github.io/P8-Workbench/
 - **GitHub Pages:** `.github/workflows/deploy.yml` builds on every push to `main` with `BASE_PATH=/<repo>/`. Enable Pages with "GitHub Actions" as the source.
 - **Vercel:** import the repo (`vercel.json` is included), no configuration needed.
 
