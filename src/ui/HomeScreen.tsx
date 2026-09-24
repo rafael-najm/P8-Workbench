@@ -5,7 +5,7 @@ import { createEmptyCart } from '../cart/cart';
 import { listProjects, type ProjectRecord } from '../persistence/db';
 import { Machine } from '../runtime/machine';
 import { SAMPLE_P8, useProject } from '../store/project';
-import { newProject, pickAndImport } from './actions';
+import { importFiles, newProject, pickAndImport } from './actions';
 import { Icon } from './components/Icon';
 import { PixelText } from './components/PixelText';
 
@@ -67,7 +67,15 @@ export function HomeScreen({ onEnter }: { onEnter(): void }) {
   };
 
   return (
-    <div className="h-full overflow-y-auto" data-testid="home">
+    <div
+      className="h-full overflow-y-auto"
+      data-testid="home"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={async (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files.length && (await importFiles(e.dataTransfer.files)) > 0) onEnter();
+      }}
+    >
       <div className="mx-auto flex max-w-5xl flex-col items-center gap-10 px-4 py-10 md:flex-row md:items-start">
         <div className="flex flex-col items-center gap-4 animate-pop">
           <DemoCart />
@@ -78,7 +86,7 @@ export function HomeScreen({ onEnter }: { onEnter(): void }) {
           <div className="mb-4 flex flex-wrap gap-2">
             <button className="btn btn-primary" onClick={() => void openExample()} data-testid="open-example"><Icon name="play" size={12} /> open example</button>
             <button className="btn" onClick={async () => { await newProject(); onEnter(); }}><Icon name="plus" size={12} /> new cart</button>
-            <button className="btn" onClick={pickAndImport}><Icon name="upload" size={12} /> import .p8</button>
+            <button className="btn" onClick={() => pickAndImport(onEnter)}><Icon name="upload" size={12} /> import .p8</button>
           </div>
           <div className="label mb-2">your carts</div>
           <div className="border border-line bg-panel">

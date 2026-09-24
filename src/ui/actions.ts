@@ -44,7 +44,8 @@ export function exportCart(): void {
   download(`${name.replace(/[^\w.-]+/g, '_') || 'cart'}.p8`, exportP8());
 }
 
-export async function importFiles(files: FileList | File[]): Promise<void> {
+export async function importFiles(files: FileList | File[]): Promise<number> {
+  let imported = 0;
   for (const file of Array.from(files)) {
     if (!file.name.toLowerCase().endsWith('.p8')) {
       toast(`${file.name}: only .p8 text carts are supported`, 'error');
@@ -54,18 +55,22 @@ export async function importFiles(files: FileList | File[]): Promise<void> {
       const text = await file.text();
       await useProject.getState().importP8(text, file.name.replace(/\.p8$/i, ''));
       toast(`imported ${file.name}`, 'success');
+      imported++;
     } catch (e) {
       toast(`${file.name}: ${e instanceof Error ? e.message : String(e)}`, 'error');
     }
   }
+  return imported;
 }
 
-export function pickAndImport(): void {
+export function pickAndImport(onImported?: () => void): void {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.p8';
   input.multiple = true;
-  input.onchange = () => input.files && void importFiles(input.files);
+  input.onchange = async () => {
+    if (input.files && (await importFiles(input.files)) > 0) onImported?.();
+  };
   input.click();
 }
 

@@ -1,5 +1,5 @@
 /** A workspace panel: floating (draggable/resizable) or docked left/right. */
-import { useRef, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { useUi, type PanelId } from '../../store/ui';
 import { Icon } from '../components/Icon';
 import { PixelText } from '../components/PixelText';
@@ -10,10 +10,17 @@ const MIN_H = 160;
 
 export function PanelFrame({ id, children }: { id: PanelId; children: ReactNode }) {
   const state = useUi((s) => s.panels[id]);
+  const topZ = useUi((s) => s.topZ);
   const { focus, setRect, setDock, close } = useUi.getState();
   const def = PANELS.get(id);
   const drag = useRef<{ mode: 'move' | 'resize'; sx: number; sy: number; x: number; y: number; w: number; h: number } | null>(null);
   const floating = state.dock === 'float';
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const onResize = () => setTick((n) => n + 1);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const onPointerDown = (mode: 'move' | 'resize') => (e: ReactPointerEvent) => {
     if (!floating || e.button !== 0) return;
@@ -38,8 +45,20 @@ export function PanelFrame({ id, children }: { id: PanelId; children: ReactNode 
   };
   const onPointerUp = () => (drag.current = null);
 
+  // Keep floating panels inside the window, header below the top bar.
+  const vw = typeof window !== 'undefined' ? window.innerWidth : 1280;
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const w = Math.min(state.w, vw - 16);
+  const h = Math.min(state.h, vh - 60);
   const style = floating
-    ? { left: state.x, top: state.y, width: state.w, height: state.h, zIndex: 20 + state.z }
+    ? {
+        left: Math.max(8, Math.min(state.x, vw - w - 8)),
+        top: Math.max(52, Math.min(state.y, vh - h - 8)),
+        width: w,
+        height: h,
+        // stay above the top bar (z 40) and below dialogs (z 100+)
+        zIndex: Math.max(50, 90 - (topZ - state.z)),
+      }
     : undefined;
 
   return (
