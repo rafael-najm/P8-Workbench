@@ -3,6 +3,8 @@ import { bootProjects, useProject } from './store/project';
 import { PixelText } from './ui/components/PixelText';
 import { Workspace } from './ui/layout/Workspace';
 import './ui/panels/GamePanel';
+import './editors/sprite/SpritePanel';
+import './editors/map/MapPanel';
 import './ui/panels/ConsolePanel';
 import './ui/panels/ProjectsPanel';
 
