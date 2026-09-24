@@ -9,7 +9,7 @@ site with no backend.
 ## Status
 
 - [x] **M1:** `.p8` parser/serializer (lossless round-trip), P8SCII mapping, PICO-8 lexer, token counter
-- [ ] M2: PICO-8 → Lua 5.4 preprocessor
+- [x] **M2:** PICO-8 → Lua 5.4 preprocessor (lexer → AST → codegen, line-preserving)
 - [ ] M3: runtime
 - [ ] M4: UI and code editor
 - [ ] M5: sprite and map editors

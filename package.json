@@ -23,6 +23,7 @@
     "idb": "^8.0.3",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "wasmoon": "^1.16.0",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
