@@ -1,6 +1,6 @@
 import { DiffEditor } from '@monaco-editor/react';
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { loadSettings, saveSettings } from '../../persistence/settings';
+import { loadSettings, RECOMMENDED_MODELS, saveSettings } from '../../persistence/settings';
 import { useUi } from '../../store/ui';
 import { Icon } from '../../ui/components/Icon';
 import { SETTINGS_SECTIONS } from '../../ui/layout/SettingsDialog';
@@ -183,6 +183,13 @@ function AgentSettings() {
       </label>
       <div className="flex flex-col gap-1">
         <span className="text-muted">Model: <span className="text-p8-blue">{s.model}</span></span>
+        <div className="flex flex-wrap gap-1">
+          {RECOMMENDED_MODELS.map((m) => (
+            <button key={m.id} className="btn h-6 text-[11px]" data-active={s.model === m.id} style={s.model === m.id ? { borderColor: 'var(--color-p8-green)' } : undefined} onClick={() => update({ model: m.id })}>
+              {m.id.split('/')[1]} <span className="text-dim">{m.note}</span>
+            </button>
+          ))}
+        </div>
         <div className="flex items-center gap-2">
           <input className="input flex-1" placeholder="search models…" value={q} onChange={(e) => setQ(e.target.value)} />
           <label className="flex items-center gap-1 text-[11px]"><input type="checkbox" checked={onlyTools} onChange={(e) => setOnlyTools(e.target.checked)} /> tools</label>

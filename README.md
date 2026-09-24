@@ -61,7 +61,7 @@ npm run test:e2e    # Playwright (builds and serves on :4173)
 npm run build       # static site in dist/
 ```
 
-Using the AI agent: open Settings (gear icon), paste an OpenRouter key and pick a model with tool support (vision recommended). The key is stored only in `localStorage` and is sent only to openrouter.ai.
+Using the AI agent: open Settings (gear icon), paste an OpenRouter key. The default model is `google/gemini-3.1-flash-lite` (very cheap, tools + vision) with a $0.25 budget per task; history is compacted and code is read in pages to keep costs low. The key is stored only in `localStorage` and is sent only to openrouter.ai.
 
 Shortcuts: `Ctrl+R` run/reload · `Ctrl+Enter` restart · `Ctrl+S` save + hot reload · `F5` play/pause · `F6` step · `Ctrl+K` command palette · `Ctrl+1..6` panels (game, sprites, map, sfx, music, agent) · `Esc` closes a panel.
 

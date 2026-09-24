@@ -12,7 +12,17 @@ export interface Settings {
   /** Max USD spent per agent task. */
   agentBudget: number;
   panelLayout: string;
+  settingsVersion: number;
 }
+
+/** Cheap model with tool calling and vision (about 12x cheaper than Sonnet). */
+export const DEFAULT_MODEL = 'google/gemini-3.1-flash-lite';
+
+export const RECOMMENDED_MODELS = [
+  { id: DEFAULT_MODEL, note: 'default · very cheap' },
+  { id: 'google/gemini-2.5-flash', note: 'cheap · strong' },
+  { id: 'anthropic/claude-haiku-4.5', note: 'smarter · ~4x the cost' },
+];
 
 const DEFAULTS: Settings = {
   lastProjectId: null,
@@ -21,10 +31,11 @@ const DEFAULTS: Settings = {
   speed: 1,
   onboarded: false,
   openrouterKey: '',
-  model: 'anthropic/claude-sonnet-4.5',
+  model: DEFAULT_MODEL,
   agentMode: 'auto',
-  agentBudget: 0.5,
+  agentBudget: 0.25,
   panelLayout: '',
+  settingsVersion: 2,
 };
 
 const KEY = 'pico-workbench.settings';
@@ -41,7 +52,15 @@ export function loadSettings(): Settings {
   const raw = storage()?.getItem(KEY);
   if (!raw) return { ...DEFAULTS };
   try {
-    return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<Settings>) };
+    const saved = { ...DEFAULTS, settingsVersion: 1, ...(JSON.parse(raw) as Partial<Settings>) };
+    if (saved.settingsVersion < 2) {
+      // v1 defaulted to an expensive model and a $0.50 budget: move to the cheap defaults.
+      if (saved.model === 'anthropic/claude-sonnet-4.5') saved.model = DEFAULT_MODEL;
+      if (saved.agentBudget === 0.5) saved.agentBudget = DEFAULTS.agentBudget;
+      saved.settingsVersion = 2;
+      storage()?.setItem(KEY, JSON.stringify(saved));
+    }
+    return saved;
   } catch {
     return { ...DEFAULTS };
   }

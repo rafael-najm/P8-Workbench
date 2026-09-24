@@ -10,14 +10,17 @@ const syntaxNote = (code: string) => {
 
 export const readCode: ToolDef<{ start_line?: number; end_line?: number }> = {
   name: 'read_code', kind: 'read',
-  description: 'Read the cart code with line numbers (optionally a line range).',
+  description: 'Read code with line numbers, at most 150 lines per call. Use the function list in the context block to pick the range you need.',
   parameters: { type: 'object', properties: { start_line: { type: 'integer', minimum: 1 }, end_line: { type: 'integer', minimum: 1 } } },
   summarize: (a) => (a.start_line ? `lines ${a.start_line}-${a.end_line ?? 'end'}` : 'all'),
   run(a, ctx) {
     const lines = ctx.cart().code.split('\n');
+    const MAX = 150;
     const s = Math.max(1, a.start_line ?? 1);
-    const e = Math.min(lines.length, a.end_line ?? lines.length);
-    return ok(`${lines.length} lines total\n` + lines.slice(s - 1, e).map((l, i) => `${String(s + i).padStart(4)}| ${l}`).join('\n'));
+    const want = Math.min(lines.length, a.end_line ?? lines.length);
+    const e = Math.min(want, s + MAX - 1);
+    const more = e < want ? `\n… (${want - e} more lines: call read_code with start_line ${e + 1})` : '';
+    return ok(`${lines.length} lines total\n` + lines.slice(s - 1, e).map((l, i) => `${String(s + i).padStart(4)}| ${l}`).join('\n') + more);
   },
 };
 

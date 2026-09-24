@@ -40,6 +40,9 @@ describe('code tools', () => {
   it('read_code / search_code', async () => {
     expect((await call('read_code', { start_line: 1, end_line: 2 })).content).toContain('   1| -- nebula strike');
     expect((await call('search_code', { query: 'function _init' })).content).toMatch(/^\d+\| function _init/);
+    const page = (await call('read_code', {})).content;
+    expect(page.split('\n').length).toBeLessThan(155);
+    expect(page).toMatch(/call read_code with start_line 151/);
   });
   it('edit_code requires a unique match and reports syntax', async () => {
     expect((await call('edit_code', { old_str: 'end', new_str: 'x' })).isError).toBe(true);
