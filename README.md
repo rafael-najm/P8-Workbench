@@ -1,20 +1,55 @@
-# PICO WORKBENCH
+<div align="center">
 
-A browser workspace for making PICO-8-style games: a full-screen code editor, sprite/map/sfx/music editors, a from-scratch PICO-8 runtime, and an AI agent (via OpenRouter, with your own key) that can edit everything, run the game headless, take screenshots and playtest.
+# ▶ PICO WORKBENCH
 
-Static site, no backend. No Lexaloffle binaries, assets or code: the runtime is original; the `.p8` text format is open; the PICO-8 font is CC0.
+**A PICO-8 game studio in your browser, with an AI agent that codes, draws, composes and playtests.**
 
-## Features
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-29adff?style=flat-square&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/React-19-83769c?style=flat-square&logo=react&logoColor=white)
+![Lua](https://img.shields.io/badge/Lua_5.4-WebAssembly-1d2b53?style=flat-square&logo=lua&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-342_passing-00e436?style=flat-square)
+![No backend](https://img.shields.io/badge/backend-none-ff77a8?style=flat-square)
+![License](https://img.shields.io/badge/license-MIT-ffec27?style=flat-square)
 
-- **Cart format:** lossless `.p8` read/write (the sample round-trips byte for byte), full P8SCII glyph mapping, and a token counter that matches PICO-8/shrinko8 (`nebula_strike.p8` = 5653 tokens).
-- **Runtime:** PICO-8 Lua is preprocessed to Lua 5.4 (wasmoon), keeping line numbers. It includes the graphics, text, input, math, table, string, memory and system APIs, the 64 KiB memory map, a watchdog for infinite loops, hot reload, and a headless mode.
-- **Editor:** Monaco with a `pico8-lua` grammar, API autocomplete and hover, color swatches, lint, runtime errors mapped to source lines, and token counts per function.
-- **Game View:** pixel-perfect canvas, pause/step/speed controls, the PICO-8 pause menu, and a globals inspector that is editable while paused.
-- **Asset editors:** sprites (tools, flags, animation preview, PNG paste), map (zoom/pan, multi-tile brushes), SFX (tracker and graph modes), and music (patterns and loop flags).
-- **Audio:** an AudioWorklet synth with the 8 PICO-8 waveforms and 7 effects, driven by a sample-accurate sequencer.
-- **AI agent:** 21 tools covering code, sprites, map, sound, running the game, screenshots, globals, eval and playtest bots. It has an approve mode with diffs, per-task undo, and cost shown per message.
+<img src="docs/images/workspace.png" alt="Code editor with the game running next to it" width="900" />
 
-## Development
+</div>
+
+PICO-8 has a charming editor, but it is tiny: 128x128 pixels. **PICO Workbench** keeps PICO-8's rules and look for the game and gives you a modern workspace around it:
+
+- a full-screen code editor that understands PICO-8 Lua;
+- sprite, map, sfx and music editors that update the running game live;
+- an **AI agent** that edits everything, runs the game headless, looks at screenshots and sends bots to playtest.
+
+The runtime is **written from scratch** (no Lexaloffle code or assets) and the whole thing is a **static site**: no server and no account. Bring your own OpenRouter key.
+
+## ✨ Highlights
+
+| | |
+|---|---|
+| 🎮 **Own PICO-8 runtime** | PICO-8 Lua is preprocessed into Lua 5.4 running in WebAssembly, with a 64 KiB memory map, 16.16 number quirks, P8SCII text codes, `flip()` and a watchdog for infinite loops. |
+| ⌨️ **Editor-first** | Monaco with a `pico8-lua` grammar, API autocomplete, color swatches on hover, lint, token count per function, and runtime errors highlighted on the right line. |
+| 🔥 **Hot reload** | `Ctrl+S` swaps in the new code without restarting the game. A globals inspector can edit variables while paused. |
+| 🖌️ **Asset editors** | Sprites (8/16/32 blocks, tools, flags, animation preview, paste a PNG and it snaps to the palette), map, and an sfx tracker/graph plus a music editor. |
+| 🔊 **Real synth** | AudioWorklet with the 8 PICO-8 waveforms and 7 effects, with sample-accurate timing. |
+| 🤖 **AI agent** | 21 tools: edit code, draw sprites from hex grids, write sfx with note names, run headless with input scripts, take screenshot contact sheets, and **playtest bots** that report time to game over, errors and object peaks. Includes an approve mode with diffs and one-click "undo the whole task". |
+| 🧪 **Tested** | `.p8` round-trips byte-for-byte, the token count matches shrinko8, the sample game runs 10,000 frames with random input, 342 unit tests and Playwright e2e. |
+
+<table>
+<tr>
+<td><img src="docs/images/home.png" alt="Home screen with a live demo cart" /></td>
+<td><img src="docs/images/sprites.png" alt="Sprite editor" /></td>
+<td><img src="docs/images/sfx.png" alt="SFX tracker" /></td>
+</tr>
+</table>
+
+## 🤖 What the agent can do
+
+> *"Add a fourth power-up to Nebula Strike that makes the shots home in for 10 seconds, draw its icon, create a pickup sfx and run a playtest to make sure nothing broke."*
+
+The agent reads the cart, edits the code in small exact replacements, draws the 8x8 icon, writes the sfx, runs the game headless to catch errors, checks screenshots, and sends a `hold_fire_track` bot through the level. Every change becomes a snapshot you can undo.
+
+## 🚀 Quick start
 
 Requires Node LTS (20+). Works on Windows, macOS and Linux.
 
