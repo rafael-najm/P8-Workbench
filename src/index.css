@@ -1,0 +1,28 @@
+@import 'tailwindcss';
+
+/* Design tokens. PICO-8 palette colors are used as accents. */
+@theme {
+  --color-bg: #0a0d14;
+  --color-panel: #111623;
+  --color-line: #232a3b;
+  --color-ink: #c2c3c7;
+  --color-p8-blue: #29adff;
+  --color-p8-pink: #ff77a8;
+  --color-p8-yellow: #ffec27;
+  --color-p8-green: #00e436;
+  --color-p8-red: #ff004d;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+}
