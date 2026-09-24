@@ -49,7 +49,7 @@ describe('tool schemas', () => {
 
 describe('code tools', () => {
   it('read_code / search_code', async () => {
-    expect((await call('read_code', { start_line: 1, end_line: 2 })).content).toContain('   1| -- nebula strike');
+    expect((await call('read_code', { start_line: 1, end_line: 2 })).content).toContain('1\t-- nebula strike');
     expect((await call('search_code', { query: 'function _init' })).content).toMatch(/^\d+\| function _init/);
     const page = (await call('read_code', {})).content;
     expect(page.split('\n').length).toBeLessThan(155);
@@ -61,6 +61,15 @@ describe('code tools', () => {
     expect(r.json).toMatchObject({ ok: true, syntax: 'ok' });
     expect(cart.code).toContain('bonus=1');
     expect((await call('edit_code', { old_str: 'bonus=1', new_str: 'bonus=(' })).json.syntax).toMatch(/syntax error/);
+  });
+  it('edit_code tolerates whitespace and copied line numbers, and gives hints', async () => {
+    // wrong indentation and a copied line-number prefix
+    const r = await call('edit_code', { old_str: '6\t   cartdata("rafael_nebulastrike_v1")\n7\thi=dget(0)', new_str: ' cartdata("rafael_nebulastrike_v1")\n hi=dget(0) lives2=1' });
+    expect(r.json).toMatchObject({ ok: true, matched: 'ignoring whitespace differences' });
+    expect(cart.code).toContain('hi=dget(0) lives2=1');
+    expect(cart.code).toContain(' cartdata("rafael_nebulastrike_v1")\n hi=dget(0) lives2=1');
+    const miss = await call('edit_code', { old_str: 'cartdata("wrong")', new_str: 'x' });
+    expect(miss.json.error).toMatch(/Similar lines: \d+:/);
   });
   it('write_code refuses to delete existing functions unless asked for a full rewrite', async () => {
     const before = cart.code;

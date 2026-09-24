@@ -91,11 +91,11 @@ end
 function __pt_find(names,need)
  for n in all(names) do local v=_G[n] if type(v)=="table" and need(v) then return n end end
 end
-function __pt_track(f)
+function __pt_track(f,alt)
  local p=__pt_player and _G[__pt_player]
  local es=__pt_enemies and _G[__pt_enemies]
  local m=0
- if f%8<6 then m=32 end
+ if f%16<6 then m=32 elseif alt and f%16>=8 and f%16<14 then m=16 end
  if type(p)=="table" and p.x and type(es)=="table" then
   local best,bd=nil,32767
   for e in all(es) do
@@ -212,7 +212,8 @@ async function runSeed(cart: Cart, args: PlaytestArgs, seed: number): Promise<Se
           nextChange = f + 1 + Math.floor(rand() * 20);
         }
       } else if (args.strategy === 'hold_fire_track') {
-        const r = m.callFunction('__pt_track', f);
+        // stuck on one screen for 5s (e.g. a title that wants 🅾️): also pulse 🅾️
+        const r = m.callFunction('__pt_track', f, m.frame - screenStart > 300);
         mask = r.ok && typeof r.values[0] === 'number' ? r.values[0] : 0;
       } else {
         evalOrThrow(m, `__pt_state.frame=${f}`);
