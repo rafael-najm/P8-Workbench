@@ -43,6 +43,8 @@ export interface StreamOptions {
   signal?: AbortSignal;
   onText?(delta: string): void;
   fetchFn?: typeof fetch;
+  /** Output cap. Also limits how much credit OpenRouter reserves per request. */
+  maxTokens?: number;
 }
 
 interface Delta {
@@ -61,7 +63,7 @@ export async function streamChat(o: StreamOptions): Promise<StreamResult> {
       'HTTP-Referer': typeof location !== 'undefined' ? location.origin : 'https://pico-workbench.local',
       'X-Title': 'PICO Workbench',
     },
-    body: JSON.stringify({ model: o.model, messages: o.messages, tools: o.tools, tool_choice: o.tools ? 'auto' : undefined, stream: true, usage: { include: true } }),
+    body: JSON.stringify({ model: o.model, messages: withCaching(o.model, o.messages), max_tokens: o.maxTokens ?? 4096, tools: o.tools, tool_choice: o.tools ? 'auto' : undefined, stream: true, usage: { include: true } }),
   });
   if (!res.ok || !res.body) {
     let msg = `HTTP ${res.status}`;
@@ -114,4 +116,12 @@ export async function streamChat(o: StreamOptions): Promise<StreamResult> {
   }
   out.toolCalls = out.toolCalls.filter(Boolean).map((t, i) => ({ ...t, id: t.id || `call_${i}_${Date.now()}` }));
   return out;
+}
+
+/** Anthropic models on OpenRouter support prompt caching: cache the (large, fixed) system prompt. */
+function withCaching(model: string, messages: ChatMessage[]): unknown[] {
+  if (!model.startsWith('anthropic/')) return messages;
+  return messages.map((m, i) =>
+    i === 0 && m.role === 'system' ? { role: 'system', content: [{ type: 'text', text: m.content, cache_control: { type: 'ephemeral' } }] } : m,
+  );
 }
