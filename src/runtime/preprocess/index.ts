@@ -5,6 +5,7 @@
  */
 import { toP8String } from '../../cart/p8scii';
 import { generate } from './codegen';
+import type { Stmt } from './ast';
 import { ParseError, parse } from './parser';
 
 export { HELPERS, luaIdent } from './codegen';
@@ -24,9 +25,32 @@ export interface PreprocessError {
 
 export type PreprocessOutcome = ({ ok: true } & PreprocessResult) | { ok: false; error: PreprocessError };
 
-export function preprocess(code: string): PreprocessOutcome {
+export interface PreprocessOptions {
+  /**
+   * Keep only top-level definitions (functions, locals, and assignments of
+   * function values), for hot reload: redefines code without re-running
+   * top-level statements that would reset game state.
+   */
+  definitionsOnly?: boolean;
+}
+
+function isDefinition(s: Stmt): boolean {
+  switch (s.kind) {
+    case 'function':
+    case 'localfunction':
+    case 'local':
+      return true;
+    case 'assign':
+      return s.values.length > 0 && s.values.every((v) => v.kind === 'function');
+    default:
+      return false;
+  }
+}
+
+export function preprocess(code: string, options: PreprocessOptions = {}): PreprocessOutcome {
   try {
     const ast = parse(toP8String(code));
+    if (options.definitionsOnly) ast.stmts = ast.stmts.filter(isDefinition);
     const { code: lua, lineMap } = generate(ast);
     return { ok: true, lua, lineMap };
   } catch (e) {

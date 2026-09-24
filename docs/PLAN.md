@@ -101,5 +101,29 @@ permite rodar o runtime inteiro dentro de um Web Worker.
 - Validação extra feita durante o desenvolvimento (fora da suíte): os 38 carts
   de `test_input/` do shrinko8 batem em tokens, caracteres e round-trip.
 
-## Planejado para depois
-- Toggle "overflow 16.16 estrito" (M3): envolver aritmética em `fx()` no pré-processador quando ativo.
+## Milestone 3: decisões do runtime
+
+- **Números:** floats do Lua 5.4. Literais saem do pré-processador com o valor
+  exato em 16.16 (`.1` = 0x0000.1999), sempre como float (nunca inteiro do Lua).
+  `#` é convertido para float. Bitwise, shifts, `tostr` (com flags 1/2),
+  `tonum`, `peek4`/`poke4` e `dget`/`dset` usam o valor 16.16 de 32 bits.
+  `tostr` formata como o zepto8 (`%.4f` e remoção de zeros).
+- **API em duas camadas:** gráficos, memória, input, som e sistema em TS,
+  registrados como funções C cruas no wasmoon (~0,27 µs por chamada, contra
+  ~3,4 µs pela camada padrão). Math, tabelas, strings, `rnd` e o laço de frames
+  ficam em Lua (chamadas Lua→Lua são baratas).
+- **Ambiente do cart:** tabela própria com a API; o `_G` real não é exposto.
+- **Frames:** o código de topo e `_init` rodam numa corrotina, então `flip()`
+  funciona em laços de topo. Depois disso, `_update60`/`_update` + `_draw`.
+- **Watchdog:** `debug.sethook` a cada 10k instruções compara `os.clock()` com
+  o prazo do frame (2 s por padrão), inclusive dentro de corrotinas do cart.
+- **Erros:** `cart:N:` é mapeado pelo line map do pré-processador, com traceback,
+  e a mensagem é desenhada na tela do jogo.
+- **Som (headless):** o sequenciador (tempo de notas, loops, padrões de música,
+  alocação de canais) já roda e alimenta `stat()`; o M6 adiciona o sintetizador.
+
+### Planejado: toggle "overflow 16.16 estrito"
+Opção no pré-processador que envolve `+ - * /` e atribuições compostas em
+helpers (`__p8_add` etc.) que convertem o resultado para 16.16 com wrap
+(`fromraw(toraw(x))`). Custa desempenho, por isso fica desligado por padrão.
+Os pontos de entrada já existem: `HELPERS` no codegen e `toraw`/`fromraw` no prelúdio.
