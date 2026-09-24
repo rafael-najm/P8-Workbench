@@ -17,12 +17,12 @@ export interface PanelState {
 }
 
 const DEFAULT_PANELS: Record<PanelId, PanelState> = {
-  game: { open: true, dock: 'right', x: 0, y: 0, w: 420, h: 520, z: 1 },
+  game: { open: true, dock: 'right', x: 240, y: 90, w: 420, h: 520, z: 1 },
   sprites: { open: false, dock: 'float', x: 120, y: 80, w: 760, h: 560, z: 1 },
   map: { open: false, dock: 'float', x: 140, y: 90, w: 820, h: 560, z: 1 },
   sfx: { open: false, dock: 'float', x: 160, y: 100, w: 780, h: 520, z: 1 },
   music: { open: false, dock: 'float', x: 180, y: 110, w: 820, h: 470, z: 1 },
-  agent: { open: false, dock: 'right', x: 0, y: 0, w: 440, h: 600, z: 1 },
+  agent: { open: false, dock: 'right', x: 280, y: 80, w: 440, h: 600, z: 1 },
   console: { open: false, dock: 'float', x: 80, y: 420, w: 560, h: 240, z: 1 },
   projects: { open: false, dock: 'float', x: 200, y: 90, w: 560, h: 520, z: 1 },
 };
@@ -93,7 +93,16 @@ export const useUi = create<UiState>((set, get) => {
       set({ topZ: z });
       update(id, { z });
     },
-    setDock: (id, dock) => update(id, { dock }),
+    setDock: (id, dock) => {
+      const p = get().panels[id];
+      if (dock === 'float' && p.dock !== 'float' && typeof window !== 'undefined') {
+        // centre the panel when it leaves a dock
+        const w = Math.min(p.w, window.innerWidth - 16);
+        const h = Math.min(p.h, window.innerHeight - 60);
+        update(id, { dock, x: Math.round((window.innerWidth - w) / 2), y: Math.max(52, Math.round((window.innerHeight - h) / 2)), z: get().topZ + 1 });
+        set({ topZ: get().topZ + 1 });
+      } else update(id, { dock });
+    },
     setRect: (id, rect) => update(id, rect),
     setPalette: (open) => set({ paletteOpen: open }),
     setSettings: (open) => set({ settingsOpen: open }),

@@ -67,7 +67,7 @@ export function ProjectsPanel() {
         <button className="btn h-6" onClick={() => void newProject()}>
           <Icon name="plus" size={10} /> new
         </button>
-        <button className="btn h-6" onClick={pickAndImport} title="Or drop .p8 files anywhere">
+        <button className="btn h-6" onClick={() => pickAndImport()} title="Or drop .p8 files anywhere">
           <Icon name="upload" size={10} /> import
         </button>
         <button className="btn h-6" onClick={exportCart}>
