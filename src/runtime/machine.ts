@@ -18,7 +18,8 @@ import { INSPECT_LUA } from './lua/inspect';
 import { PRELUDE_LUA } from './lua/prelude';
 import { CART_GLOBALS, STDLIB_LUA } from './lua/stdlib';
 import { ADDR, cartToRom, Memory } from './memory';
-import { mapLine, preprocess } from './preprocess';
+import { luaIdent, mapLine, preprocess } from './preprocess';
+import { GLYPH_CONSTANTS } from './api/docs';
 import { renderScreen } from './render';
 
 // Lua helpers that depend on the machine's environment.
@@ -250,12 +251,14 @@ export class Machine {
   /** Creates a fresh cart environment with the API. */
   private resetEnv(): void {
     const names = [...CART_GLOBALS, ...JS_API_NAMES, 'stat', 'menuitem'];
+    const glyphs = [...GLYPH_CONSTANTS].map(([byte, v]) => `${luaIdent(String.fromCharCode(byte))}=${v}`).join(',');
     this.bridge.exec(`
       local names = {${names.map((n) => `"${n}"`).join(',')}}
       local env, builtin = {}, {}
       for _, n in ipairs(names) do env[n] = _G[n] builtin[n] = true end
       env._G = env
       builtin._G = true
+      for k, v in pairs({${glyphs}}) do env[k] = v builtin[k] = true end
       __p8_env, __p8_builtin = env, builtin
       __p8_menu = {}
       __p8_t = 0.0

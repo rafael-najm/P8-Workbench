@@ -11,7 +11,7 @@ site with no backend.
 - [x] **M1:** `.p8` parser/serializer (lossless round-trip), P8SCII mapping, PICO-8 lexer, token counter
 - [x] **M2:** PICO-8 → Lua 5.4 preprocessor (lexer → AST → codegen, line-preserving)
 - [x] **M3:** runtime (memory map, graphics/text/input API, Lua stdlib, frame cycle, watchdog, headless mode)
-- [ ] M4: UI and code editor
+- [x] **M4:** UI shell (dockable panels, command palette, shortcuts), Monaco `pico8-lua`, Game View with inspector and hot reload, projects in IndexedDB
 - [ ] M5: sprite and map editors
 - [ ] M6: audio
 - [ ] M7: AI agent

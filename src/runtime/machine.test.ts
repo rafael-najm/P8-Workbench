@@ -143,6 +143,11 @@ describe('Lua API (via eval)', () => {
     expect(ev('peek(0x4503)')).toBe(7);
   });
 
+  it('glyph constants: buttons and fill patterns', () => {
+    expect(ev('{⬅️,➡️,⬆️,⬇️,🅾️,❎}')).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(ev('tostr(▒,1)')).toBe('0x5a5a.8000');
+  });
+
   it('time() starts at 0', () => {
     expect(ev('type(time())')).toBe('number');
   });
@@ -363,5 +368,17 @@ describe('nebula_strike.p8', () => {
     const res = await runHeadless(cart, { frames: 30, watch: ['st'] });
     expect(res.error).toBeNull();
     expect(res.globals.st).toBe(1);
+  });
+});
+
+describe('input taps', () => {
+  it('a press and release between two frames still counts as one pressed frame', async () => {
+    const { m } = await machineWith('n=0 function _update() if (btnp(5)) n+=1 end');
+    m.step(1);
+    m.input.setButton(0, 5, true);
+    m.input.setButton(0, 5, false);
+    m.step(3);
+    expect(m.globals(['n']).n).toBe(1);
+    m.dispose();
   });
 });

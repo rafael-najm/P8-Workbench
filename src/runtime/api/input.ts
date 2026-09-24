@@ -16,6 +16,8 @@ const DEFAULT_REPEAT = 4;
 export class Input {
   /** Live state written by the host (keyboard, gamepad, scripted input). */
   private live = new Uint8Array(PLAYERS);
+  /** Buttons pressed since the last latch (so taps shorter than a frame still register). */
+  private tapped = new Uint8Array(PLAYERS);
   /** State latched at the start of the current frame. */
   private cur = new Uint8Array(PLAYERS);
   /** Frames each button has been held (player * 8 + button). */
@@ -26,13 +28,17 @@ export class Input {
 
   setButton(player: number, button: number, down: boolean): void {
     if (player < 0 || player >= PLAYERS || button < 0 || button > 7) return;
-    if (down) this.live[player]! |= 1 << button;
-    else this.live[player]! &= ~(1 << button);
+    if (down) {
+      this.live[player]! |= 1 << button;
+      this.tapped[player]! |= 1 << button;
+    } else this.live[player]! &= ~(1 << button);
   }
 
   /** Replaces a player's live state with a bitmask. */
   setMask(player: number, mask: number): void {
-    if (player >= 0 && player < PLAYERS) this.live[player] = mask & 0xff;
+    if (player < 0 || player >= PLAYERS) return;
+    this.tapped[player]! |= mask & ~this.live[player]! & 0xff;
+    this.live[player] = mask & 0xff;
   }
 
   getMask(player: number): number {
@@ -41,12 +47,14 @@ export class Input {
 
   releaseAll(): void {
     this.live.fill(0);
+    this.tapped.fill(0);
   }
 
   /** Called once per game frame, before _update. */
   latch(): void {
     for (let p = 0; p < PLAYERS; p++) {
-      const mask = this.live[p]!;
+      const mask = this.live[p]! | this.tapped[p]!;
+      this.tapped[p] = 0;
       this.cur[p] = mask;
       for (let b = 0; b < 8; b++) {
         const i = p * 8 + b;
@@ -57,6 +65,7 @@ export class Input {
 
   reset(): void {
     this.live.fill(0);
+    this.tapped.fill(0);
     this.cur.fill(0);
     this.held.fill(0);
   }

@@ -1,27 +1,41 @@
-import { useMemo } from 'react';
-import { parseP8 } from './cart/p8format';
-import { codeStats } from './cart/tokens';
-import nebula from '../samples/nebula_strike.p8?raw';
+import { useEffect, useState } from 'react';
+import { bootProjects, useProject } from './store/project';
+import { PixelText } from './ui/components/PixelText';
+import { Workspace } from './ui/layout/Workspace';
+import './ui/panels/GamePanel';
+import './ui/panels/ConsolePanel';
+import './ui/panels/ProjectsPanel';
 
-// TODO(milestone-4): replace this placeholder with the real workspace shell
-// (full-screen Monaco, dockable panels, command palette).
 export function App() {
-  const stats = useMemo(() => codeStats(parseP8(nebula).code), []);
-  const pct = Math.round((stats.tokens / stats.tokenLimit) * 100);
+  const ready = useProject((s) => s.cart !== null);
+  const [error, setError] = useState<string | null>(null);
 
-  return (
-    <main className="flex h-full items-center justify-center p-4">
-      <section className="w-full max-w-md border border-line bg-panel p-6 shadow-[4px_4px_0_0_#000]">
-        <h1 className="mb-1 text-lg font-bold tracking-widest text-p8-pink">PICO WORKBENCH</h1>
-        <p className="mb-6 text-sm opacity-70">Milestone 1: cart format &amp; token counter</p>
-        <p className="mb-2 text-sm">
-          nebula_strike.p8 · <span className="text-p8-yellow">{stats.tokens}</span>/{stats.tokenLimit} tokens ·{' '}
-          {stats.chars}/{stats.charLimit} chars
-        </p>
-        <div className="h-2 w-full border border-line">
-          <div className="h-full bg-p8-blue" style={{ width: `${pct}%` }} />
+  useEffect(() => {
+    bootProjects().catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+  }, []);
+
+  if (error) {
+    return (
+      <div className="grid h-full place-items-center p-6">
+        <div className="max-w-md border border-p8-red bg-panel p-5 shadow-[var(--shadow-hard-lg)]">
+          <PixelText text="could not start" scale={3} color="#ff004d" />
+          <p className="mt-3 text-muted">{error}</p>
+          <p className="mt-2 text-dim">Projects are stored in IndexedDB. Private browsing modes can block it.</p>
         </div>
-      </section>
-    </main>
-  );
+      </div>
+    );
+  }
+  if (!ready) {
+    return (
+      <div className="grid h-full place-items-center">
+        <div className="flex flex-col items-center gap-3 animate-fade">
+          <PixelText text="pico workbench" scale={4} color="#ff77a8" shadow="#1d2b53" />
+          <div className="h-1 w-40 overflow-hidden bg-line">
+            <div className="h-full w-1/3 animate-pulse bg-p8-blue" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+  return <Workspace />;
 }
