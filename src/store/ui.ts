@@ -21,7 +21,7 @@ const DEFAULT_PANELS: Record<PanelId, PanelState> = {
   sprites: { open: false, dock: 'float', x: 120, y: 80, w: 760, h: 560, z: 1 },
   map: { open: false, dock: 'float', x: 140, y: 90, w: 820, h: 560, z: 1 },
   sfx: { open: false, dock: 'float', x: 160, y: 100, w: 780, h: 520, z: 1 },
-  music: { open: false, dock: 'float', x: 180, y: 110, w: 720, h: 480, z: 1 },
+  music: { open: false, dock: 'float', x: 180, y: 110, w: 820, h: 470, z: 1 },
   agent: { open: false, dock: 'right', x: 0, y: 0, w: 440, h: 600, z: 1 },
   console: { open: false, dock: 'float', x: 80, y: 420, w: 560, h: 240, z: 1 },
   projects: { open: false, dock: 'float', x: 200, y: 90, w: 560, h: 520, z: 1 },

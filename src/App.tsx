@@ -5,6 +5,8 @@ import { Workspace } from './ui/layout/Workspace';
 import './ui/panels/GamePanel';
 import './editors/sprite/SpritePanel';
 import './editors/map/MapPanel';
+import './editors/sfx/SfxPanel';
+import './editors/music/MusicPanel';
 import './ui/panels/ConsolePanel';
 import './ui/panels/ProjectsPanel';
 

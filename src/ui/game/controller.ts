@@ -7,6 +7,7 @@ import glueWasmUrl from 'wasmoon/dist/glue.wasm?url';
 import type { Cart } from '../../cart/types';
 import type { AudioBackend } from '../../runtime/audio/backend';
 import { Machine, type RuntimeError } from '../../runtime/machine';
+import { audio } from '../../runtime/audio/webaudio';
 import { loadCartData, saveCartData } from '../../persistence/settings';
 import { useConsole } from '../../store/console';
 import type { AssetKind } from '../../store/project';
@@ -38,8 +39,8 @@ class GameController {
   private lastPublish = 0;
   private keyState = new Map<string, boolean>();
   private listeners = new Set<ControllerListener>();
-  /** Set by the audio module (M6) to provide sound. */
-  audioFactory: ((ram: Uint8Array) => AudioBackend) | null = null;
+  /** Sound backend for the interactive machine (WebAudio worklet). */
+  audioFactory: ((ram: Uint8Array) => AudioBackend) | null = typeof window !== 'undefined' ? (ram) => audio.gameBackend(ram) : null;
   /** Called with runtime errors (to mark lines in the editor). */
   onError: ((err: RuntimeError | null) => void) | null = null;
 
@@ -90,6 +91,7 @@ class GameController {
   async run(cart: Cart): Promise<void> {
     const rt = useRuntime.getState();
     rt.set({ status: 'loading', error: null, stopMessage: '' });
+    void audio.ensure();
     const m = await this.getMachine();
     const err = m.load(cart);
     this.paused = false;

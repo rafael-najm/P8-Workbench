@@ -13,7 +13,7 @@ site with no backend.
 - [x] **M3:** runtime (memory map, graphics/text/input API, Lua stdlib, frame cycle, watchdog, headless mode)
 - [x] **M4:** UI shell (dockable panels, command palette, shortcuts), Monaco `pico8-lua`, Game View with inspector and hot reload, projects in IndexedDB
 - [x] **M5:** sprite editor (tools, flags, animation preview, undo, PNG paste) and map editor (zoom/pan, tile brushes, shared-area warning)
-- [ ] M6: audio
+- [x] **M6:** audio (AudioWorklet synth with 8 waveforms and 7 effects, sample-accurate sequencer, sfx tracker/graph editor, music pattern editor)
 - [ ] M7: AI agent
 - [ ] M8: polish and deploy
 

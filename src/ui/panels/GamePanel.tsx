@@ -7,6 +7,7 @@ import { PixelText } from '../components/PixelText';
 import { game } from '../game/controller';
 import { revealLine } from '../../editors/code/CodeEditor';
 import { registerPanel } from './registry';
+import { audio } from '../../runtime/audio/webaudio';
 
 const SPEEDS = [0.25, 0.5, 1, 2, 4];
 const SCALES: (number | 'fit')[] = ['fit', 2, 3, 4, 5, 6, 8];
@@ -166,6 +167,11 @@ function Toolbar() {
   const frame = useRuntime((s) => s.frame);
   const speed = useRuntime((s) => s.speed);
   const [prefs, setPrefs] = useState(() => loadSettings());
+  const [muted, setMutedState] = useState(audio.muted);
+  const setMuted = (m: boolean) => {
+    audio.setMuted(m);
+    setMutedState(m);
+  };
   const running = status === 'running';
   const active = status === 'running' || status === 'paused';
 
@@ -209,6 +215,9 @@ function Toolbar() {
       </select>
       <button className="btn-ghost text-[10px]" data-active={prefs.crt} onClick={toggleCrt} title="CRT effect">
         CRT
+      </button>
+      <button className="btn-ghost" data-active={!muted} onClick={() => setMuted(!muted)} title={muted ? 'Unmute' : 'Mute'}>
+        <Icon name="sfx" size={14} className={muted ? 'opacity-40' : ''} />
       </button>
       <div className="flex-1" />
       <div className="text-right text-[10px] leading-tight text-muted tabular-nums">

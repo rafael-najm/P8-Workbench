@@ -27,6 +27,9 @@ interface EditorState {
   mapTool: MapTool;
   /** Tile brush for the map: w x h sprites starting at `sprite`. */
   mapSelection: Selection | null;
+  /** Selected sfx and music pattern. */
+  sfx: number;
+  pattern: number;
   set(patch: Partial<Omit<EditorState, 'set'>>): void;
 }
 
@@ -42,5 +45,7 @@ export const useEditor = create<EditorState>((set) => ({
   anim: { from: 1, to: 4, fps: 8, playing: false },
   mapTool: 'pencil',
   mapSelection: null,
+  sfx: 0,
+  pattern: 0,
   set: (patch) => set(patch),
 }));
