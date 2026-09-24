@@ -20,7 +20,7 @@ export const readCode: ToolDef<{ start_line?: number; end_line?: number }> = {
     const want = Math.min(lines.length, a.end_line ?? lines.length);
     const e = Math.min(want, s + MAX - 1);
     const more = e < want ? `\n… (${want - e} more lines: call read_code with start_line ${e + 1})` : '';
-    return ok(`${lines.length} lines total\n` + lines.slice(s - 1, e).map((l, i) => `${String(s + i).padStart(4)}| ${l}`).join('\n') + more);
+    return ok(`${lines.length} lines total; format: <line number><TAB><code>\n` + lines.slice(s - 1, e).map((l, i) => `${s + i}\t${l}`).join('\n') + more);
   },
 };
 
@@ -37,25 +37,65 @@ export const searchCode: ToolDef<{ query: string; regex?: boolean }> = {
   },
 };
 
+/** Removes line-number prefixes a model may copy from read_code output ("  12\t", "12| "). */
+function stripLineNumbers(text: string): string {
+  const lines = text.split('\n');
+  if (lines.length && lines.every((l) => /^\s*\d+(\t|\| ?)/.test(l) || l.trim() === '')) return lines.map((l) => l.replace(/^\s*\d+(\t|\| ?)/, '')).join('\n');
+  return text;
+}
+
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Matches of `needle` in `code` ignoring differences in whitespace (indentation, spacing, blank lines). */
+function looseMatches(code: string, needle: string): { index: number; length: number }[] {
+  const parts = needle.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return [];
+  const re = new RegExp(parts.map(escapeRe).join('\\s*'), 'g');
+  const out: { index: number; length: number }[] = [];
+  for (const m of code.matchAll(re)) out.push({ index: m.index!, length: m[0].length });
+  return out;
+}
+
+/** Lines similar to the first line of old_str, to help the model retry. */
+function hints(code: string, oldStr: string): string {
+  const first = oldStr.split('\n').map((l) => l.trim()).find(Boolean) ?? '';
+  const words = first.split(/\W+/).filter((w) => w.length > 2);
+  const scored = code.split('\n').map((l, i) => ({ i, l, s: words.filter((w) => l.includes(w)).length })).filter((x) => x.s > 0).sort((a, b) => b.s - a.s).slice(0, 5);
+  return scored.length ? ` Similar lines: ${scored.map((x) => `${x.i + 1}:${JSON.stringify(x.l)}`).join(' ')}` : '';
+}
+
 export const editCode: ToolDef<{ old_str: string; new_str: string }> = {
   name: 'edit_code', kind: 'edit',
-  description: 'Replace an exact, unique snippet of code (old_str must occur exactly once; include enough context). Prefer this over write_code.',
+  description: 'Replace a unique snippet of code: old_str = the current text (e.g. a few lines or a whole function, copied from read_code without the line numbers), new_str = the replacement. To insert code, include an existing neighbouring line in old_str and repeat it in new_str. Whitespace differences are tolerated.',
   parameters: { type: 'object', properties: { old_str: { type: 'string' }, new_str: { type: 'string' } }, required: ['old_str', 'new_str'] },
   summarize: (a) => a.old_str.split('\n')[0]!.slice(0, 50),
   preview(a, ctx) {
     const before = ctx.cart().code;
-    return { type: 'code', before, after: before.replace(a.old_str, () => a.new_str) };
+    const r = locate(before, a.old_str);
+    return { type: 'code', before, after: 'index' in r ? before.slice(0, r.index) + stripLineNumbers(a.new_str) + before.slice(r.index + r.length) : before };
   },
   run(a, ctx) {
     const code = ctx.cart().code;
-    const n = a.old_str ? code.split(a.old_str).length - 1 : 0;
-    if (n !== 1) return fail(n === 0 ? 'old_str not found (check exact whitespace; use read_code)' : `old_str occurs ${n} times; add context to make it unique`);
-    const next = code.replace(a.old_str, () => a.new_str);
+    const r = locate(code, a.old_str);
+    if ('error' in r) return fail(r.error);
+    const next = code.slice(0, r.index) + stripLineNumbers(a.new_str) + code.slice(r.index + r.length);
     ctx.update(['code'], 'edit_code', (c) => (c.code = next));
-    const line = code.slice(0, code.indexOf(a.old_str)).split('\n').length;
-    return ok({ ok: true, at_line: line, tokens: codeStats(next).tokens, syntax: syntaxNote(next) ?? 'ok' });
+    const line = code.slice(0, r.index).split('\n').length;
+    return ok({ ok: true, at_line: line, matched: r.loose ? 'ignoring whitespace differences' : 'exact', tokens: codeStats(next).tokens, syntax: syntaxNote(next) ?? 'ok' });
   },
 };
+
+function locate(code: string, rawOld: string): { index: number; length: number; loose: boolean } | { error: string } {
+  const oldStr = stripLineNumbers(rawOld);
+  if (!oldStr.trim()) return { error: 'old_str is empty' };
+  const exact = code.split(oldStr).length - 1;
+  if (exact === 1) return { index: code.indexOf(oldStr), length: oldStr.length, loose: false };
+  if (exact > 1) return { error: `old_str occurs ${exact} times; include more surrounding lines to make it unique` };
+  const loose = looseMatches(code, oldStr);
+  if (loose.length === 1) return { ...loose[0]!, loose: true };
+  if (loose.length > 1) return { error: `old_str matches ${loose.length} places (ignoring whitespace); include more surrounding lines` };
+  return { error: `old_str not found.${hints(code, oldStr)} Use read_code on that range and copy the text after the tab.` };
+}
 
 /** Names of top-level-ish functions (function foo / function a.b / function a:b / local function foo). */
 function functionNames(code: string): Set<string> {
